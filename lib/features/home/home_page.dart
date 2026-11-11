@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/services.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/section_title.dart';
+import '../capture/new_session_page.dart';
+import '../sessions/session_detail_page.dart';
 import '../sessions/session_list_builder.dart';
 import '../sessions/session_tile.dart';
 
@@ -39,11 +41,16 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const SizedBox(
+                    SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: null, // Wired up with video capture.
-                        child: Text('Analyse a clip'),
+                        key: const Key('home-analyse'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const NewSessionPage(),
+                          ),
+                        ),
+                        child: const Text('Analyse a clip'),
                       ),
                     ),
                   ],
@@ -67,7 +74,10 @@ class HomePage extends StatelessWidget {
                 )
               else
                 for (final session in sessions.take(3))
-                  SessionTile(session: session),
+                  SessionTile(
+                    session: session,
+                    onTap: () => openSession(context, session.id),
+                  ),
             ],
           ),
         ),

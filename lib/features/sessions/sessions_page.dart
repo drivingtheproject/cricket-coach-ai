@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../widgets/empty_state.dart';
+import 'session_detail_page.dart';
 import 'session_list_builder.dart';
 import 'session_tile.dart';
 
@@ -26,8 +27,10 @@ class SessionsPage extends StatelessWidget {
           return ListView.separated(
             itemCount: sessions.length,
             separatorBuilder: (_, __) => const Divider(indent: 20, endIndent: 20),
-            itemBuilder: (context, index) =>
-                SessionTile(session: sessions[index]),
+            itemBuilder: (context, index) => SessionTile(
+              session: sessions[index],
+              onTap: () => openSession(context, sessions[index].id),
+            ),
           );
         },
       ),

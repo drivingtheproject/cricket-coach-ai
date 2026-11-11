@@ -3,8 +3,14 @@ import 'package:sqflite/sqflite.dart';
 
 import 'auth/auth_controller.dart';
 import 'auth/local_auth_repository.dart';
+import 'capture/clip_picker.dart';
 import 'db/app_database.dart';
+import 'pose/plugins/mlkit_pose_estimator.dart';
+import 'pose/plugins/thumbnail_frame_extractor.dart';
+import 'pose/pose_extraction_service.dart';
+import 'sessions/analysis_pipeline.dart';
 import 'sessions/session_repository.dart';
+import 'sessions/video_store.dart';
 
 /// The long-lived objects the app is built from.
 class AppServices {
@@ -12,21 +18,39 @@ class AppServices {
     required this.database,
     required this.auth,
     required this.sessions,
+    required this.videos,
+    required this.clipPicker,
+    required this.pipeline,
   });
 
   final Database database;
   final AuthController auth;
   final SessionRepository sessions;
+  final VideoStore videos;
+  final ClipPicker clipPicker;
+  final AnalysisPipeline pipeline;
 
   /// Opens the on-device database and restores the previous sign-in.
   static Future<AppServices> create() async {
     final database = await AppDatabase.openOnDevice();
     final auth = AuthController(LocalAuthRepository(database));
     await auth.restore();
+    final sessions = SessionRepository(database);
+    final videos = VideoStore.onDevice();
     return AppServices(
       database: database,
       auth: auth,
-      sessions: SessionRepository(database),
+      sessions: sessions,
+      videos: videos,
+      clipPicker: ImagePickerClipPicker(),
+      pipeline: AnalysisPipeline(
+        videos: videos,
+        sessions: sessions,
+        poses: PoseExtractionService(
+          extractor: const ThumbnailFrameExtractor(),
+          estimator: MlKitPoseEstimator(),
+        ),
+      ),
     );
   }
 }
