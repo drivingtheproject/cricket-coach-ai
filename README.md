@@ -40,6 +40,10 @@ test/          unit tests for geometry and routing
 
 ## Getting started
 
+Requires Flutter 3.47 or newer: the app uses the standalone `material_ui`
+package, which replaced `package:flutter/material.dart`. CI runs on the current
+stable channel.
+
 The Android and iOS folders are not committed yet. Generate them once:
 
 ```sh

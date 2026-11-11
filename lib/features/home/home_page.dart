@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Landing screen. Capture and analysis arrive in M1.
 class HomePage extends StatelessWidget {
