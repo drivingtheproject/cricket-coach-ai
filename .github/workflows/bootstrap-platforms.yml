@@ -1,0 +1,37 @@
+name: Bootstrap platforms
+
+# One-off job: generates the android/ and ios/ folders with `flutter create`
+# and commits them. Removed once the folders exist.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/bootstrap-platforms.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate android and ios folders
+        run: |
+          flutter create --platforms=android,ios --org com.drivingtheproject --project-name cricket_coach_ai --no-pub .
+          # Keep every file that is already tracked exactly as committed.
+          git checkout -- .
+          rm -f test/widget_test.dart
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Generate Android and iOS platform folders"
+          git pull --rebase origin main
+          git push origin HEAD:main
