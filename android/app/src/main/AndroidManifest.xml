@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Needed in release builds to call the cloud coach providers. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="cricket_coach_ai"
+        android:label="Cricket Coach"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

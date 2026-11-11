@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'ci/**']
   pull_request:
 
 jobs:
@@ -14,6 +14,10 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Install SQLite for the database tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - name: flutter test
+        if: success() || failure()
+        run: flutter test

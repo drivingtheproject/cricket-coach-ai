@@ -1,0 +1,23 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../../widgets/empty_state.dart';
+
+class ProgressPage extends StatelessWidget {
+  const ProgressPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Progress')),
+      body: const Align(
+        alignment: Alignment.topLeft,
+        child: EmptyState(
+          icon: Icons.show_chart,
+          title: 'Nothing to chart yet',
+          message: 'Your scores over time appear here after your first '
+              'session.',
+        ),
+      ),
+    );
+  }
+}

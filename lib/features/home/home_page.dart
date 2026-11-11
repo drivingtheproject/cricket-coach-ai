@@ -1,34 +1,73 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Landing screen. Capture and analysis arrive in M1.
+import '../../core/services.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/section_title.dart';
+import '../sessions/session_list_builder.dart';
+import '../sessions/session_tile.dart';
+
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.onOpenSessions});
+
+  final VoidCallback onOpenSessions;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final firstName = ServicesScope.of(context).auth.user?.firstName ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('Cricket Coach AI')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      body: SafeArea(
+        child: SessionListBuilder(
+          builder: (context, sessions) => ListView(
+            padding: const EdgeInsets.symmetric(vertical: 24),
             children: [
-              const Icon(Icons.sports_cricket, size: 72),
-              const SizedBox(height: 16),
-              Text('Analyse your batting', style: textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              Text(
-                'Record or import a short side-on clip to get feedback.',
-                style: textTheme.bodyMedium,
-                textAlign: TextAlign.center,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      firstName.isEmpty ? 'Welcome' : 'Welcome, $firstName',
+                      style: theme.textTheme.displaySmall,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Film a shot from side-on and get feedback on your '
+                      'technique.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: null, // Wired up with video capture.
+                        child: Text('Analyse a clip'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
-              const FilledButton(
-                onPressed: null, // Enabled in M1 (video capture + pose).
-                child: Text('Analyse a clip'),
+              const SizedBox(height: 32),
+              SectionTitle(
+                'Recent sessions',
+                action: sessions.isEmpty
+                    ? null
+                    : TextButton(
+                        onPressed: onOpenSessions,
+                        child: const Text('See all'),
+                      ),
               ),
+              if (sessions.isEmpty)
+                const EmptyState(
+                  icon: Icons.sports_cricket,
+                  title: 'No sessions yet',
+                  message: 'Your analysed clips will appear here.',
+                )
+              else
+                for (final session in sessions.take(3))
+                  SessionTile(session: session),
             ],
           ),
         ),
