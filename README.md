@@ -80,7 +80,7 @@ repeatable.
 | M2 | Video capture/import, pose extraction, skeleton overlay | Done |
 | M3 | Batting metrics and phase detection | Done |
 | M4 | Cloud coach: Claude, OpenAI, Gemini; built-in coach; API key settings | Done |
-| M5 | Local Gemma 4: model download and auto-routing | |
+| M5 | Local Gemma 4: model download and auto-routing | Done |
 | M6 | Session history, progress charts, drills, sync engine | |
 | M7 | Bowling analysis, polish, release build | |
 | M8 | Fielding and catching | |
