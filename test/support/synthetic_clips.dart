@@ -206,3 +206,46 @@ const SideIndexes _rightIndexes = (
   knee: PoseLandmarkIndex.rightKnee,
   ankle: PoseLandmarkIndex.rightAnkle,
 );
+
+/// Catching clip numbers, in frames at 15 fps: ready until 10, the hands
+/// reach and close by 14, then give until 18.
+const int catchFrame = 14;
+const double catchHandGap = 0.04;
+const double catchStanceWidth = 0.20;
+const double catchGive = 0.10;
+const (double, double) catchHip = (0.54, 0.56);
+const (double, double) catchKnee = (0.60, 0.70);
+const (double, double) catchAnkle = (0.60, 0.85);
+
+/// A two-handed catch seen from in front, in a square frame. With
+/// [handsApart] the hands never close.
+List<PoseFrame> catchingClip({bool handsApart = false, int frames = 30}) {
+  return [
+    for (var i = 0; i < frames; i++)
+      () {
+        final left = handsApart
+            ? const (0.60, 0.50)
+            : keyframed(const {
+                10: (0.60, 0.50),
+                14: (0.52, 0.36),
+                18: (0.52, 0.46),
+              }, i);
+        final right = (1 - left.$1, left.$2);
+        return frameOf(timeOf(i), {
+          PoseLandmarkIndex.nose: const (0.50, 0.22),
+          PoseLandmarkIndex.leftShoulder: const (0.56, 0.32),
+          PoseLandmarkIndex.rightShoulder: const (0.44, 0.32),
+          PoseLandmarkIndex.leftElbow: (left.$1 + 0.06, left.$2 + 0.02),
+          PoseLandmarkIndex.rightElbow: (right.$1 - 0.06, right.$2 + 0.02),
+          PoseLandmarkIndex.leftWrist: left,
+          PoseLandmarkIndex.rightWrist: right,
+          PoseLandmarkIndex.leftHip: catchHip,
+          PoseLandmarkIndex.rightHip: (1 - catchHip.$1, catchHip.$2),
+          PoseLandmarkIndex.leftKnee: catchKnee,
+          PoseLandmarkIndex.rightKnee: (1 - catchKnee.$1, catchKnee.$2),
+          PoseLandmarkIndex.leftAnkle: catchAnkle,
+          PoseLandmarkIndex.rightAnkle: (1 - catchAnkle.$1, catchAnkle.$2),
+        });
+      }(),
+  ];
+}

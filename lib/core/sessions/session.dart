@@ -1,6 +1,7 @@
 enum Discipline {
   batting('Batting'),
-  bowling('Bowling');
+  bowling('Bowling'),
+  fielding('Fielding');
 
   const Discipline(this.label);
   final String label;

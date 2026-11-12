@@ -149,6 +149,78 @@ const Map<String, ({Drill? low, Drill? high})> _drills = {
     ),
     high: null,
   ),
+  'field_hands_together': (
+    low: null,
+    high: Drill(
+      'Little fingers together',
+      'Take underarm feeds at waist height with your little fingers '
+          'touching and fingers pointing down. Twenty catches.',
+    ),
+  ),
+  'field_knees': (
+    low: Drill(
+      'Ready and move',
+      'Start from a half-squat, not a full one, and take catches thrown a '
+          'step either side of you. Twenty catches.',
+    ),
+    high: Drill(
+      'Sit into the catch',
+      'Bend your knees as each ball is thrown, as if sitting on a high '
+          'stool, before you catch it. Twenty catches.',
+    ),
+  ),
+  'field_base': (
+    low: Drill(
+      'Shoulder-width set',
+      'Lay two markers a shoulder-width apart and set your feet on them '
+          'before every catch. Twenty catches.',
+    ),
+    high: Drill(
+      'Narrow and quick',
+      'Bring your feet in to shoulder width and take catches that make '
+          'you step to the ball. Twenty catches.',
+    ),
+  ),
+  'field_head_line': (
+    low: null,
+    high: Drill(
+      'Feet first',
+      'Have a partner throw slightly to either side. Move your feet so '
+          'that every ball is caught in front of your chin. Twenty catches.',
+    ),
+  ),
+  'field_elbows': (
+    low: Drill(
+      'Reach and bring in',
+      'Meet each ball with your hands a forearm\'s length in front of '
+          'your body, then bring it in. Twenty catches.',
+    ),
+    high: Drill(
+      'Soft elbows',
+      'Catch a tennis ball with elbows bent and relaxed, letting your '
+          'hands ride back. Twenty catches.',
+    ),
+  ),
+  'field_give': (
+    low: Drill(
+      'Egg catches',
+      'Catch a soft ball as if it were an egg, drawing your hands back '
+          'towards your body as it arrives. Twenty catches.',
+    ),
+    high: Drill(
+      'Catch and hold',
+      'Give with the ball for a hand\'s length only, then hold it still '
+          'for a second. Twenty catches.',
+    ),
+  ),
+  'field_head_steady': (
+    low: null,
+    high: Drill(
+      'Watch it into the hands',
+      'Keep your eyes level and watch each ball all the way into your '
+          'hands before you look up. Twenty catches.',
+    ),
+  ),
 };
 
 /// The drill for a measurement outside its guide range, if there is one.

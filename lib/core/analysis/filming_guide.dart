@@ -36,5 +36,15 @@ class FilmingGuide {
               'One ball per clip, in good light. Slow-motion video helps.',
             ],
           ),
+        Discipline.fielding => const FilmingGuide(
+            intro: 'Film one two-handed catch.',
+            tips: [
+              'Film from in front or from the side, at chest height.',
+              'Keep the whole body in the frame, head to feet.',
+              'Start a second before the ball arrives and keep filming '
+                  'until the ball is under control.',
+              'One catch per clip, in good light.',
+            ],
+          ),
       };
 }

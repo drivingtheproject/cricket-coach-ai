@@ -83,7 +83,7 @@ repeatable.
 | M5 | Local Gemma 4: model download and auto-routing | Done |
 | M6 | Session review (rename, notes, delete), progress charts, drills, sync engine | Done |
 | M7 | Bowling analysis, discipline picker, release and iOS build workflows | Done |
-| M8 | Fielding and catching | |
+| M8 | Fielding: catching analysis | Done |
 | M9 | Wicketkeeping | |
 
 ## Known limits
