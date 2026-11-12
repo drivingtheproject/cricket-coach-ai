@@ -11,29 +11,55 @@ you can review them and follow your progress.
 
 1. **Sign in** - accounts live in the on-device database. Passwords are stored
    as salted PBKDF2 hashes.
-2. **Capture** - record or import a short clip (3-10 s), filmed side-on.
-3. **Pose** - 33 body landmarks are extracted per frame, on the device.
-4. **Metrics** - pure Dart code finds the phases of the movement and computes
-   joint angles, head position, stride, balance and timing.
-5. **Coach** - the metrics (never the video) go to a `CoachProvider`, which
-   returns a summary, strengths, improvements and drills.
-6. **Review** - skeleton overlay playback, metric bars, feedback, notes,
-   history and progress charts.
+2. **Choose a discipline** - batting, bowling, fielding (catching) or
+   wicketkeeping.
+3. **Capture** - record or import a short clip of one ball.
+4. **Pose** - 33 body landmarks are extracted per sampled frame, on the device
+   (Google ML Kit pose detection).
+5. **Measure** - pure Dart analyzers find the key moments of the movement and
+   compute seven measurements per discipline, each scored against a guide
+   range. The technique score is the mean of those scores.
+6. **Coach** - the measurements (never the video) go to a coach, which returns
+   a summary, strengths, improvements and drills.
+7. **Review** - skeleton overlay playback with jump-to-moment, measurement
+   bars, feedback, your own notes, history and progress charts.
 
-### Hybrid AI
+### What each discipline measures
 
-`CoachRouter` picks the coach. Local Gemma is the default and works offline; a
-cloud provider is used when you save an API key for it and prefer it. A
-rule-based coach is always available as a fallback. API keys are kept in the
-device's secure storage and never leave it except to call the provider.
+| Discipline | Moments found | Measurements |
+|------------|---------------|--------------|
+| Batting | Stance, backlift, impact, finish | Front knee, front elbow, head over front foot, stride, backlift height, head movement, balance at finish |
+| Bowling | Front foot lands, release, follow-through | Arm straightness, release height, front knee, trunk lean, stride, head movement, follow-through |
+| Fielding | Ready, catch, give | Hands together, knee bend, stance width, head in line, elbow bend, give, head movement |
+| Wicketkeeping | Set, take, give | Crouch depth, stance width, rise before the take, gloves together, head in line, elbow bend, give |
+
+### Who writes the feedback
+
+`CoachService` picks the coach. In automatic mode the order is:
+
+1. **Gemma 4 on the phone** (`flutter_edge_ai`, LiteRT-LM) once its model has
+   been downloaded from Settings. Works offline; nothing leaves the device.
+2. **A cloud coach** - Claude, ChatGPT (OpenAI) or Gemini - when you have saved
+   your own API key for it. Model names are editable in Settings.
+3. **The built-in coach**, which writes feedback straight from the
+   measurements with no AI model. Always available.
+
+You can also pick one coach in Settings. If the chosen coach fails, the
+built-in coach answers and the feedback says why. API keys are kept in the
+phone's secure storage (Keychain / Keystore), never in the database.
 
 ### Data and sync
 
-Everything is stored in SQLite (`lib/core/db/app_database.dart`). Every
-syncable row carries `updated_at`, `sync_state` and a soft-delete flag, and the
-sync engine talks to a `RemoteStore` interface, so a Firebase backend can be
-added without changing the schema or the UI. `AuthRepository` is an interface
-for the same reason.
+Everything is stored in SQLite (`lib/core/db/app_database.dart`). Every session
+row carries `updated_at`, `sync_state` and a soft-delete flag. `SyncService`
+pushes pending changes, pulls remote ones and resolves conflicts by
+last-edit-wins, against a `CloudBackend` interface.
+
+The app ships with `NoCloudBackend`, so sync is **not active yet**. To turn it
+on, implement `CloudBackend` (for example with Cloud Firestore) and pass it to
+`SyncService` in `lib/core/services.dart`; implement `AuthRepository` with
+Firebase Auth in the same way. Session records sync; video clips and pose data
+stay on the phone.
 
 ## Project layout
 
@@ -41,18 +67,25 @@ for the same reason.
 lib/
   main.dart, app.dart
   core/
+    analysis/  analyzers for each discipline, metrics, body helpers
     auth/      accounts, password hashing, auth state
+    capture/   clip picker
+    coach/     coach providers (cloud/, local/), prompt, parser, drills
     db/        SQLite schema
-    sessions/  Session model and repository
-    pose/      landmarks, extraction pipeline
-    metrics/   phase detection and technique metrics
-    coach/     coach providers, router, prompt and parser
+    pose/      landmarks, frame extraction, pose estimation
+    progress/  progress summaries
+    sessions/  Session model, repository, analysis pipeline, video store
+    settings/  per-user settings and secret storage
+    sync/      sync engine and cloud backend interface
     theme/     colours, type, shared decoration
     util/      ids, validators, formatters
   features/    one folder per screen
   widgets/     shared widgets
 test/          unit and widget tests
 ```
+
+Everything that touches a plugin sits behind an interface in a `plugins/`
+folder, so the logic is unit-tested with fakes.
 
 ## Getting started
 
@@ -70,6 +103,24 @@ on macOS).
 
 Commit `pubspec.lock` after your first `flutter pub get` so builds are
 repeatable.
+
+### Platform requirements
+
+- **Android**: Android 11 (API 30) or newer, 64-bit ARM. The on-device model
+  runtime sets this floor.
+- **iOS**: iOS 15.5 or newer. For the on-device model on a real iPhone, add the
+  extended-virtual-addressing and increased-memory-limit entitlements to the
+  Runner target (see the `flutter_edge_ai` documentation); they need a paid
+  Apple developer account.
+
+### Workflows
+
+| Workflow | When | What |
+|----------|------|------|
+| CI | every push | `flutter analyze` and `flutter test` |
+| Android build | every push | debug APK compiles |
+| iOS build | manual, or push to `ci/ios*` | unsigned iOS build compiles |
+| Release build | manual | release APK as a downloadable artifact |
 
 ## Milestones
 
@@ -89,13 +140,18 @@ repeatable.
 ## Known limits
 
 - Pose tracking sees the body only: the app coaches body mechanics, not bat
-  path, ball contact or line and length.
-- Metric guide ranges are sensible starting points from coaching literature,
-  not validated biomechanics. Treat feedback as a prompt for practice, not a
-  verdict.
-- At 30 fps a fast bowling arm blurs; film in good light, and in slow motion
-  where the phone allows it.
-- Gemma 4 is a multi-gigabyte download, fetched on demand.
+  path, ball contact, line and length, or whether a catch was held.
+- Guide ranges are general coaching starting points, not validated
+  biomechanics, and have not been tuned against real footage yet. Treat
+  feedback as a prompt for practice, not a verdict. The ranges live at the top
+  of each analyzer.
+- A single camera cannot judge whether a bowling action is legal.
+- Clips are sampled at 15 frames per second, so a fast bowling arm is caught
+  in only a few frames; film in good light, and in slow motion where the
+  phone allows it.
+- Gemma 4 E2B is a 2.4 GB download and suits recent phones with 8 GB of
+  memory or more.
+- Cloud sync and cloud accounts are not connected yet (see Data and sync).
 
 ## Fonts
 
