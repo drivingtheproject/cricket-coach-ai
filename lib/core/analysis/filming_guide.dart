@@ -46,5 +46,14 @@ class FilmingGuide {
               'One catch per clip, in good light.',
             ],
           ),
+        Discipline.wicketkeeping => const FilmingGuide(
+            intro: 'Film one take from the set position.',
+            tips: [
+              'Film from in front or from the side, at waist height.',
+              'Keep the whole body in the frame, head to feet.',
+              'Start in your set position, before the ball is bowled.',
+              'One ball per clip, in good light.',
+            ],
+          ),
       };
 }

@@ -221,6 +221,78 @@ const Map<String, ({Drill? low, Drill? high})> _drills = {
           'hands before you look up. Twenty catches.',
     ),
   ),
+  'keep_crouch': (
+    low: Drill(
+      'Weight on the balls of the feet',
+      'Set with your heels just off the ground and thighs above your '
+          'knees, then rise to take a rolled ball. Fifteen takes.',
+    ),
+    high: Drill(
+      'Low set, late rise',
+      'Set so that your gloves touch the ground between your feet before '
+          'every ball. Fifteen takes.',
+    ),
+  ),
+  'keep_stance': (
+    low: Drill(
+      'Feet outside the shoulders',
+      'Mark two lines just wider than your shoulders and set your feet on '
+          'them, then take balls either side. Fifteen takes.',
+    ),
+    high: Drill(
+      'Narrow and push',
+      'Bring your feet in a little and practise one sharp side-step each '
+          'way before taking the ball. Fifteen takes.',
+    ),
+  ),
+  'keep_rise': (
+    low: null,
+    high: Drill(
+      'Rise with the bounce',
+      'Take underarm feeds that bounce once. Stay down until the ball '
+          'bounces and come up with it. Fifteen takes.',
+    ),
+  ),
+  'keep_gloves_together': (
+    low: null,
+    high: Drill(
+      'Gloves as one',
+      'Take tennis balls with your little fingers overlapping and '
+          'fingers pointing down. Twenty takes.',
+    ),
+  ),
+  'keep_head_line': (
+    low: null,
+    high: Drill(
+      'Step, then take',
+      'Take balls fed a step either side, moving your feet so that each '
+          'one arrives under your eyes. Twenty takes.',
+    ),
+  ),
+  'keep_elbows': (
+    low: Drill(
+      'Gloves out in front',
+      'Meet each ball a forearm\'s length in front of your body with '
+          'elbows clear of your ribs. Twenty takes.',
+    ),
+    high: Drill(
+      'Relaxed arms',
+      'Shake your arms loose before each ball and take it with a small '
+          'bend at the elbows. Twenty takes.',
+    ),
+  ),
+  'keep_give': (
+    low: Drill(
+      'Ride the ball',
+      'Take firm underarm feeds and let your gloves travel back towards '
+          'your hip as the ball lands. Twenty takes.',
+    ),
+    high: Drill(
+      'Take and hold',
+      'Give for a hand\'s length only, then hold the ball still for a '
+          'second. Twenty takes.',
+    ),
+  ),
 };
 
 /// The drill for a measurement outside its guide range, if there is one.

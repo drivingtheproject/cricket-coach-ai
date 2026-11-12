@@ -84,7 +84,7 @@ repeatable.
 | M6 | Session review (rename, notes, delete), progress charts, drills, sync engine | Done |
 | M7 | Bowling analysis, discipline picker, release and iOS build workflows | Done |
 | M8 | Fielding: catching analysis | Done |
-| M9 | Wicketkeeping | |
+| M9 | Wicketkeeping analysis | Done |
 
 ## Known limits
 

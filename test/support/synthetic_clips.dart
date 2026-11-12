@@ -257,3 +257,49 @@ List<PoseFrame> catchingClip({
       }(),
   ];
 }
+
+/// Keeping clip numbers, in frames at 15 fps: set in the crouch until 12,
+/// rising and reaching until the take at 18, then give until 22.
+const int keepingTakeFrame = 18;
+const double keepingStanceWidth = 0.16;
+const double keepingHeadRise = 0.12;
+const double keepingGloveGap = 0.04;
+const (double, double) keepingSetHip = (0.53, 0.72);
+const (double, double) keepingKnee = (0.60, 0.70);
+const (double, double) keepingAnkle = (0.58, 0.85);
+
+/// A wicketkeeper taking one ball, seen from in front, in a square frame.
+/// With [standsTall] the keeper never crouches.
+List<PoseFrame> keepingClip({bool standsTall = false, int frames = 30}) {
+  (double, double) mirror((double, double) p) => (1 - p.$1, p.$2);
+  return [
+    for (var i = 0; i < frames; i++)
+      () {
+        // 0 in the crouch, 1 once risen.
+        final up = standsTall ? 1.0 : ((i - 12) / 6).clamp(0.0, 1.0);
+        final hip = lerp(keepingSetHip, const (0.54, 0.58), up);
+        final shoulder = lerp(const (0.56, 0.48), const (0.56, 0.36), up);
+        final glove = keyframed(const {
+          12: (0.56, 0.74),
+          keepingTakeFrame: (0.52, 0.52),
+          22: (0.52, 0.60),
+        }, i);
+        return frameOf(timeOf(i), {
+          PoseLandmarkIndex.nose:
+              lerp(const (0.50, 0.38), const (0.50, 0.26), up),
+          PoseLandmarkIndex.leftShoulder: shoulder,
+          PoseLandmarkIndex.rightShoulder: mirror(shoulder),
+          PoseLandmarkIndex.leftElbow: (glove.$1 + 0.07, glove.$2 - 0.03),
+          PoseLandmarkIndex.rightElbow: mirror((glove.$1 + 0.07, glove.$2 - 0.03)),
+          PoseLandmarkIndex.leftWrist: glove,
+          PoseLandmarkIndex.rightWrist: mirror(glove),
+          PoseLandmarkIndex.leftHip: hip,
+          PoseLandmarkIndex.rightHip: mirror(hip),
+          PoseLandmarkIndex.leftKnee: keepingKnee,
+          PoseLandmarkIndex.rightKnee: mirror(keepingKnee),
+          PoseLandmarkIndex.leftAnkle: keepingAnkle,
+          PoseLandmarkIndex.rightAnkle: mirror(keepingAnkle),
+        });
+      }(),
+  ];
+}
