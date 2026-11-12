@@ -1,7 +1,7 @@
 name: cricket_coach_ai
 description: AI cricket coach - on-device pose analysis with local and cloud LLM feedback.
 publish_to: 'none'
-version: 0.4.0+4
+version: 0.5.0+5
 
 environment:
   sdk: ^3.5.0
@@ -20,6 +20,8 @@ dependencies:
   video_thumbnail_gen: ^0.6.3
   http: ^1.2.2
   flutter_secure_storage: ^9.2.2
+  flutter_edge_ai: ^2.3.2
+  flutter_edge_ai_litertlm: ^1.13.2
   google_mlkit_pose_detection: ^0.16.1
 
 dev_dependencies:

@@ -8,6 +8,9 @@ import 'auth/local_auth_repository.dart';
 import 'capture/clip_picker.dart';
 import 'coach/coach_service.dart';
 import 'coach/coach_settings.dart';
+import 'coach/local/gemma_coach.dart';
+import 'coach/local/model_download_controller.dart';
+import 'coach/local/plugins/edge_ai_llm.dart';
 import 'db/app_database.dart';
 import 'pose/plugins/mlkit_pose_estimator.dart';
 import 'pose/plugins/thumbnail_frame_extractor.dart';
@@ -29,6 +32,7 @@ class AppServices {
     required this.pipeline,
     required this.coachSettings,
     required this.coach,
+    this.localModel,
   });
 
   final Database database;
@@ -39,6 +43,9 @@ class AppServices {
   final AnalysisPipeline pipeline;
   final CoachSettings coachSettings;
   final CoachService coach;
+
+  /// The on-device model's download state; null in builds without one.
+  final ModelDownloadController? localModel;
 
   /// Opens the on-device database and restores the previous sign-in.
   static Future<AppServices> create() async {
@@ -51,7 +58,12 @@ class AppServices {
       settings: SettingsRepository(database),
       secrets: const SecureSecretStore(),
     );
-    final coach = CoachService(settings: coachSettings, client: http.Client());
+    final llm = EdgeAiLlm();
+    final coach = CoachService(
+      settings: coachSettings,
+      client: http.Client(),
+      localCoach: GemmaCoach(llm),
+    );
     return AppServices(
       database: database,
       auth: auth,
@@ -60,6 +72,7 @@ class AppServices {
       clipPicker: ImagePickerClipPicker(),
       coachSettings: coachSettings,
       coach: coach,
+      localModel: ModelDownloadController(llm),
       pipeline: AnalysisPipeline(
         videos: videos,
         sessions: sessions,

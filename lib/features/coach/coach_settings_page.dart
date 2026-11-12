@@ -4,13 +4,11 @@ import '../../core/coach/coach_provider.dart';
 import '../../core/services.dart';
 import '../../widgets/section_title.dart';
 import 'api_key_page.dart';
+import 'local_model_section.dart';
 
 /// Lets the player choose who writes their feedback and manage API keys.
 class CoachSettingsPage extends StatefulWidget {
-  const CoachSettingsPage({super.key, this.extraSections = const []});
-
-  /// Extra blocks shown under the list, such as the on-device model manager.
-  final List<Widget> extraSections;
+  const CoachSettingsPage({super.key});
 
   @override
   State<CoachSettingsPage> createState() => _CoachSettingsPageState();
@@ -27,6 +25,7 @@ class _CoachSettingsPageState extends State<CoachSettingsPage> {
     super.didChangeDependencies();
     if (_services == null) {
       _services = ServicesScope.of(context);
+      _services!.localModel?.refresh();
       _load();
     }
   }
@@ -129,7 +128,8 @@ class _CoachSettingsPageState extends State<CoachSettingsPage> {
                     style: muted,
                   ),
                 ),
-                ...widget.extraSections,
+                if (_services!.localModel case final model?)
+                  LocalModelSection(controller: model, onChanged: _load),
               ],
             ),
     );
