@@ -1,10 +1,14 @@
 import '../pose/pose_frame.dart';
 import '../sessions/session.dart';
+import 'metric.dart';
 import 'technique_analysis.dart';
 
 /// Measures one discipline's technique from a clip's tracked poses.
 abstract interface class TechniqueAnalyzer {
   Discipline get discipline;
+
+  /// Every measurement this analyzer can report.
+  List<MetricSpec> get specs;
 
   /// [aspectRatio] is the clip's width divided by its height.
   ///

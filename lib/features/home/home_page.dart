@@ -34,8 +34,7 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Film a shot from side-on and get feedback on your '
-                      'technique.',
+                      'Film your game and get feedback on your technique.',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

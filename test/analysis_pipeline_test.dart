@@ -34,6 +34,9 @@ class FakeAnalyzer implements TechniqueAnalyzer {
   Discipline get discipline => Discipline.batting;
 
   @override
+  List<MetricSpec> get specs => const [];
+
+  @override
   TechniqueAnalysis analyze(
     List<PoseFrame> frames, {
     required Handedness handedness,

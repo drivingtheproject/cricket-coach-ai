@@ -85,6 +85,70 @@ const Map<String, ({Drill? low, Drill? high})> _drills = {
           'moving your feet. Fifteen balls.',
     ),
   ),
+  'bowl_arm': (
+    low: Drill(
+      'Tall arm against a wall',
+      'Stand side-on to a wall and bowl slow arm circles so that your hand '
+          'brushes up the wall at full stretch. Two sets of ten.',
+    ),
+    high: null,
+  ),
+  'bowl_release_height': (
+    low: Drill(
+      'Bowl over a rope',
+      'Tie a rope at head height a step in front of the crease and bowl '
+          'over it from a standing start. Twelve balls.',
+    ),
+    high: null,
+  ),
+  'bowl_front_knee': (
+    low: Drill(
+      'Brace and hold',
+      'Walk through your action and freeze at release with the front leg '
+          'firm. Hold for two seconds. Ten repetitions.',
+    ),
+    high: null,
+  ),
+  'bowl_trunk_lean': (
+    low: Drill(
+      'Chest to the target',
+      'Bowl from a two-step walk-in and finish with your chest over your '
+          'front knee, facing the batter. Twelve balls.',
+    ),
+    high: Drill(
+      'Bowl down the channel',
+      'Lay two lines of cones a shoulder-width apart towards the batter '
+          'and finish every ball inside them. Twelve balls.',
+    ),
+  ),
+  'bowl_stride': (
+    low: Drill(
+      'Marked landing',
+      'Mark where your front foot should land, a little past your usual '
+          'spot, and hit the mark from a short run-up. Twelve balls.',
+    ),
+    high: Drill(
+      'Shorter stride, taller finish',
+      'Bring your landing mark back by a foot length and focus on getting '
+          'up and over the front leg. Twelve balls.',
+    ),
+  ),
+  'bowl_head_level': (
+    low: null,
+    high: Drill(
+      'Eyes on a target',
+      'Pick a spot on the pitch and keep your eyes level on it from the '
+          'last stride until after release. Twelve balls.',
+    ),
+  ),
+  'bowl_follow_through': (
+    low: Drill(
+      'Hand to opposite pocket',
+      'After release let your bowling hand finish beside your opposite '
+          'hip and take two more strides down the pitch. Twelve balls.',
+    ),
+    high: null,
+  ),
 };
 
 /// The drill for a measurement outside its guide range, if there is one.

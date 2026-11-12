@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cricket_coach_ai/core/pose/pose_frame.dart';
 
 /// Builds a 33-landmark frame from the named points; everything else is
@@ -119,3 +121,88 @@ List<PoseFrame> battingClip({bool leftHanded = false, int frames = 30}) {
       }(),
   ];
 }
+
+/// Bowling clip numbers, in frames at 15 fps: the front foot lands at 13 and
+/// the ball is released at 16, with the arm vertical.
+const int bowlingLandFrame = 13;
+const int bowlingReleaseFrame = 16;
+const (double, double) bowlingShoulder = (0.50, 0.30);
+const double bowlingArmLength = 0.24;
+const (double, double) bowlingFrontHip = (0.53, 0.56);
+const (double, double) bowlingFrontKnee = (0.585, 0.70);
+const (double, double) bowlingFrontAnkle = (0.62, 0.85);
+const (double, double) bowlingBackAnkle = (0.40, 0.85);
+
+/// A right-arm bowler's delivery seen from side-on, in a square frame. The
+/// bowling arm swings in a circle about the shoulder at a steady speed.
+/// [elbowBend] moves the elbow off the line of the arm to bend it.
+List<PoseFrame> bowlingClip({
+  bool leftArm = false,
+  double elbowBend = 0,
+  int frames = 30,
+}) {
+  final arm = leftArm ? _leftIndexes : _rightIndexes;
+  final front = leftArm ? _rightIndexes : _leftIndexes;
+  return [
+    for (var i = 0; i < frames; i++)
+      () {
+        // 210 degrees (behind and low) at frame 12, vertical at 16, in front
+        // and low at 20.
+        final swing = i.clamp(12, 20) - 12;
+        final angle = (210 - 30 * swing) * math.pi / 180;
+        final hand = (
+          bowlingShoulder.$1 + bowlingArmLength * math.cos(angle),
+          bowlingShoulder.$2 - bowlingArmLength * math.sin(angle),
+        );
+        final elbow = lerp(bowlingShoulder, hand, 0.5);
+        return frameOf(timeOf(i), {
+          PoseLandmarkIndex.nose: const (0.52, 0.20),
+          arm.shoulder: bowlingShoulder,
+          arm.elbow: (elbow.$1 + elbowBend, elbow.$2),
+          arm.wrist: hand,
+          arm.hip: const (0.49, 0.56),
+          arm.knee: const (0.44, 0.70),
+          arm.ankle: bowlingBackAnkle,
+          front.shoulder: const (0.52, 0.31),
+          front.elbow: const (0.56, 0.36),
+          front.wrist: const (0.60, 0.42),
+          front.hip: bowlingFrontHip,
+          front.knee: keyframed(
+            const {8: (0.50, 0.70), bowlingLandFrame: bowlingFrontKnee},
+            i,
+          ),
+          front.ankle: keyframed(
+            const {8: (0.50, 0.85), bowlingLandFrame: bowlingFrontAnkle},
+            i,
+          ),
+        });
+      }(),
+  ];
+}
+
+typedef SideIndexes = ({
+  int shoulder,
+  int elbow,
+  int wrist,
+  int hip,
+  int knee,
+  int ankle,
+});
+
+const SideIndexes _leftIndexes = (
+  shoulder: PoseLandmarkIndex.leftShoulder,
+  elbow: PoseLandmarkIndex.leftElbow,
+  wrist: PoseLandmarkIndex.leftWrist,
+  hip: PoseLandmarkIndex.leftHip,
+  knee: PoseLandmarkIndex.leftKnee,
+  ankle: PoseLandmarkIndex.leftAnkle,
+);
+
+const SideIndexes _rightIndexes = (
+  shoulder: PoseLandmarkIndex.rightShoulder,
+  elbow: PoseLandmarkIndex.rightElbow,
+  wrist: PoseLandmarkIndex.rightWrist,
+  hip: PoseLandmarkIndex.rightHip,
+  knee: PoseLandmarkIndex.rightKnee,
+  ankle: PoseLandmarkIndex.rightAnkle,
+);

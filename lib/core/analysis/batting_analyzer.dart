@@ -121,6 +121,17 @@ class BattingAnalyzer implements TechniqueAnalyzer {
   Discipline get discipline => Discipline.batting;
 
   @override
+  List<MetricSpec> get specs => const [
+        frontKnee,
+        frontElbow,
+        headOverFoot,
+        stride,
+        backlift,
+        headLevel,
+        finishBalance,
+      ];
+
+  @override
   TechniqueAnalysis analyze(
     List<PoseFrame> frames, {
     required Handedness handedness,
@@ -212,7 +223,7 @@ class BattingAnalyzer implements TechniqueAnalyzer {
             : track.percentOfBody(hips.y - hands.y);
       }),
     );
-    add(headLevel, _headTravel(track, top, impact));
+    add(headLevel, headTravel(track, top, impact));
     add(
       finishBalance,
       track.near(finish, (f) {
@@ -246,19 +257,5 @@ class BattingAnalyzer implements TechniqueAnalyzer {
         if (finish > impact) PhaseMarker('Finish', track.frames[finish].timeMs),
       ],
     );
-  }
-
-  /// How far the head moved up and down between two frames, as a percentage
-  /// of body length.
-  static double? _headTravel(BodyTrack track, int from, int to) {
-    double? lowest;
-    double? highest;
-    for (var i = from; i <= to; i++) {
-      final y = track.frames[i].head?.y;
-      if (y == null) continue;
-      lowest = lowest == null ? y : math.min(lowest, y);
-      highest = highest == null ? y : math.max(highest, y);
-    }
-    return lowest == null ? null : track.percentOfBody(highest! - lowest);
   }
 }

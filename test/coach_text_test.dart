@@ -161,16 +161,32 @@ void main() {
     test('every metric an analyzer can report has a drill', () {
       final analyzers = defaultAnalyzers();
       expect(analyzers, isNotEmpty);
-      const battingIds = [
-        'front_knee',
-        'front_elbow',
-        'head_over_front_foot',
-        'stride',
-        'backlift',
-        'head_level',
-        'finish_balance',
+      for (final analyzer in analyzers.values) {
+        expect(analyzer.specs, isNotEmpty);
+        for (final spec in analyzer.specs) {
+          expect(
+            metricIdsWithDrills,
+            contains(spec.id),
+            reason: '${analyzer.discipline.name} metric ${spec.id}',
+          );
+          // Being out of range must lead to a drill on at least one side.
+          final low = spec.evaluate(spec.idealMin - spec.tolerance);
+          final high = spec.evaluate(spec.idealMax + spec.tolerance);
+          expect(
+            drillFor(low) ?? drillFor(high),
+            isNotNull,
+            reason: 'no drill for ${spec.id}',
+          );
+        }
+      }
+    });
+
+    test('metric ids are unique across disciplines', () {
+      final ids = [
+        for (final analyzer in defaultAnalyzers().values)
+          for (final spec in analyzer.specs) spec.id,
       ];
-      expect(metricIdsWithDrills, containsAll(battingIds));
+      expect(ids.toSet(), hasLength(ids.length));
     });
   });
 }

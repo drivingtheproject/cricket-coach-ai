@@ -1,11 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/analysis/filming_guide.dart';
 import '../../core/capture/clip_picker.dart';
 import '../../core/services.dart';
 import '../../core/sessions/session.dart';
 import 'analysis_page.dart';
 
-/// Where a new analysis starts: say which hand you play with, then record or
+/// Where a new analysis starts: pick what you are practising, then record or
 /// choose a clip.
 class NewSessionPage extends StatefulWidget {
   const NewSessionPage({super.key});
@@ -15,7 +16,7 @@ class NewSessionPage extends StatefulWidget {
 }
 
 class _NewSessionPageState extends State<NewSessionPage> {
-  final Discipline _discipline = Discipline.batting;
+  Discipline _discipline = Discipline.batting;
   Handedness _handedness = Handedness.right;
   bool _picking = false;
 
@@ -56,30 +57,47 @@ class _NewSessionPageState extends State<NewSessionPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final guide = FilmingGuide.of(_discipline);
+    final handQuestion = guide.handQuestion;
     return Scaffold(
       appBar: AppBar(title: const Text('New session')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          Text('Which hand do you play with?', style: theme.textTheme.titleMedium),
+          Text('What are you practising?', style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
-          SegmentedButton<Handedness>(
-            showSelectedIcon: false,
-            segments: [
-              for (final hand in Handedness.values)
-                ButtonSegment(value: hand, label: Text(hand.label)),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final discipline in Discipline.values)
+                ChoiceChip(
+                  key: Key('discipline-${discipline.name}'),
+                  label: Text(discipline.label),
+                  selected: discipline == _discipline,
+                  onSelected: (_) => setState(() => _discipline = discipline),
+                ),
             ],
-            selected: {_handedness},
-            onSelectionChanged: (selection) =>
-                setState(() => _handedness = selection.first),
           ),
+          if (handQuestion != null) ...[
+            const SizedBox(height: 28),
+            Text(handQuestion, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            SegmentedButton<Handedness>(
+              showSelectedIcon: false,
+              segments: [
+                for (final hand in Handedness.values)
+                  ButtonSegment(value: hand, label: Text(hand.label)),
+              ],
+              selected: {_handedness},
+              onSelectionChanged: (selection) =>
+                  setState(() => _handedness = selection.first),
+            ),
+          ],
           const SizedBox(height: 28),
           Text('For a clip we can read', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
-          const _Tip('Film from side-on, level with the hips.'),
-          const _Tip('Keep the whole body in the frame, head to feet.'),
-          const _Tip('Prop the phone up or have someone hold it still.'),
-          const _Tip('One shot per clip, 3 to 10 seconds, in good light.'),
+          for (final tip in guide.tips) _Tip(tip),
           const SizedBox(height: 28),
           FilledButton.icon(
             key: const Key('new-session-record'),

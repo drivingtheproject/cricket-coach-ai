@@ -195,6 +195,25 @@ class BodyTrack {
     return i;
   }
 
+  /// Last index at or before the time [ms] after frame [index].
+  int indexAfter(int index, int ms) {
+    final target = frames[index].timeMs + ms;
+    var i = index;
+    while (i < length - 1 && frames[i + 1].timeMs <= target) {
+      i++;
+    }
+    return i;
+  }
+
+  /// First index after [from] where [speed] has dropped below [fraction] of
+  /// its value at [from]; the last frame when it never does.
+  int settleIndex(List<double> speed, int from, {double fraction = 0.2}) {
+    for (var i = from + 1; i < length; i++) {
+      if (speed[i] < speed[from] * fraction) return i;
+    }
+    return length - 1;
+  }
+
   /// Reads a value at [index], falling back to the neighbouring frames when
   /// the landmarks it needs are hidden there.
   double? near(int index, double? Function(BodyFrame frame) read) {
@@ -238,4 +257,18 @@ class BodyTrack {
     final median = lengths[lengths.length ~/ 2];
     return median > 0 ? median : null;
   }
+}
+
+/// How far the head moved up and down between two frames (inclusive), as a
+/// percentage of body length. Null when the head was never seen.
+double? headTravel(BodyTrack track, int from, int to) {
+  double? lowest;
+  double? highest;
+  for (var i = math.min(from, to); i <= math.max(from, to); i++) {
+    final y = track.frames[i].head?.y;
+    if (y == null) continue;
+    lowest = lowest == null ? y : math.min(lowest, y);
+    highest = highest == null ? y : math.max(highest, y);
+  }
+  return lowest == null ? null : track.percentOfBody(highest! - lowest);
 }

@@ -1,0 +1,20 @@
+name: iOS build
+
+# Compiles the iOS app without signing, to catch build errors. Run it from
+# the Actions tab, or push to a ci/ios branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['ci/ios**']
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
