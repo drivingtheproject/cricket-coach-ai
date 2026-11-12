@@ -118,6 +118,10 @@ void main() {
     final tour = FilmingTour.of(Discipline.bowling);
 
     Future<List<bool?>> pumpTour(WidgetTester tester) async {
+      // Tall enough that the whole checklist is laid out.
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final results = <bool?>[];
       await tester.pumpWidget(
         MaterialApp(
@@ -204,7 +208,7 @@ void main() {
     testWidgets('backing out does not count as finished', (tester) async {
       final results = await pumpTour(tester);
 
-      await tester.pageBack();
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
       await tester.pumpAndSettle();
 
       expect(results, [false]);
@@ -216,7 +220,10 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: AppTheme.dark(),
-            home: FilmingTourPage(tour: FilmingTour.of(discipline)),
+            home: FilmingTourPage(
+              key: ValueKey(discipline),
+              tour: FilmingTour.of(discipline),
+            ),
           ),
         );
         for (var i = 0; i < FilmingTour.of(discipline).steps.length - 1; i++) {
