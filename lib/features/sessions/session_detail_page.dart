@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/analysis/technique_analysis.dart';
 import '../../core/pose/pose_frame.dart';
 import '../../core/services.dart';
 import '../../core/sessions/session.dart';
 import '../../core/util/formatters.dart';
+import 'analysis_section.dart';
 import 'pose_video_player.dart';
 
 /// Opens the review screen for a session.
@@ -83,19 +85,28 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
     }
     final theme = Theme.of(context);
     final video = _video;
+    final encoded = session.analysisJson;
+    final analysis = encoded == null ? null : TechniqueAnalysis.decode(encoded);
     return Scaffold(
       appBar: AppBar(title: Text(session.title)),
       body: ListView(
         children: [
           if (video != null)
-            PoseVideoPlayer(video: video, frames: _frames)
+            PoseVideoPlayer(
+              video: video,
+              frames: _frames,
+              markers: [
+                for (final phase in analysis?.phases ?? const <PhaseMarker>[])
+                  TimelineMarker(phase.label, phase.timeMs),
+              ],
+            )
           else
             const Padding(
               padding: EdgeInsets.all(20),
               child: Text('The clip for this session is not on this device.'),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             child: Text(
               '${session.discipline.label}, '
               '${session.handedness.label.toLowerCase()}\n'
@@ -107,6 +118,8 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
               ),
             ),
           ),
+          if (analysis != null) AnalysisSection(analysis: analysis),
+          const SizedBox(height: 24),
         ],
       ),
     );

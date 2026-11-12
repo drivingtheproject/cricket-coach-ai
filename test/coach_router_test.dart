@@ -1,7 +1,7 @@
+import 'package:cricket_coach_ai/core/analysis/technique_analysis.dart';
 import 'package:cricket_coach_ai/core/coach/coach_feedback.dart';
 import 'package:cricket_coach_ai/core/coach/coach_provider.dart';
 import 'package:cricket_coach_ai/core/coach/coach_router.dart';
-import 'package:cricket_coach_ai/core/metrics/batting_metrics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class FakeProvider implements CoachProvider {
@@ -15,7 +15,7 @@ class FakeProvider implements CoachProvider {
   Future<bool> isAvailable() async => available;
 
   @override
-  Future<CoachFeedback> analyze(BattingMetrics metrics) async =>
+  Future<CoachFeedback> analyze(TechniqueAnalysis analysis) async =>
       const CoachFeedback(summary: 'ok');
 }
 

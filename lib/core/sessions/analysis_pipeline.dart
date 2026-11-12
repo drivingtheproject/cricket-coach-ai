@@ -1,3 +1,5 @@
+import '../analysis/technique_analysis.dart';
+import '../analysis/technique_analyzer.dart';
 import '../analysis_exception.dart';
 import '../auth/user.dart';
 import '../pose/pose_extraction_service.dart';
@@ -27,6 +29,7 @@ class AnalysisPipeline {
     required this.videos,
     required this.poses,
     required this.sessions,
+    this.analyzers = const {},
     this.minDetectionRate = 0.4,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
@@ -34,6 +37,9 @@ class AnalysisPipeline {
   final VideoStore videos;
   final PoseExtractionService poses;
   final SessionRepository sessions;
+
+  /// Disciplines without an analyzer are saved with pose tracking only.
+  final Map<Discipline, TechniqueAnalyzer> analyzers;
 
   /// Below this share of frames with a person in them, the clip is rejected.
   final double minDetectionRate;
@@ -54,6 +60,17 @@ class AnalysisPipeline {
     try {
       final frames = await _trackBody(id, videoPath, onProgress);
 
+      TechniqueAnalysis? analysis;
+      final analyzer = analyzers[discipline];
+      if (analyzer != null) {
+        onProgress?.call(AnalysisStage.measuring, null);
+        analysis = analyzer.analyze(
+          frames.frames,
+          handedness: handedness,
+          aspectRatio: frames.aspectRatio,
+        );
+      }
+
       onProgress?.call(AnalysisStage.saving, null);
       final now = _now();
       final session = Session(
@@ -64,6 +81,8 @@ class AnalysisPipeline {
         handedness: handedness,
         videoPath: videoPath,
         durationMs: frames.durationMs,
+        analysisJson: analysis?.encode(),
+        score: analysis?.score,
         createdAt: now,
         updatedAt: now,
       );
@@ -100,6 +119,7 @@ class AnalysisPipeline {
       return PoseExtractionResult(
         frames: smoothPoses(result.frames),
         durationMs: result.durationMs,
+        aspectRatio: result.aspectRatio,
       );
     } finally {
       await videos.removeWorkDirectory(id);

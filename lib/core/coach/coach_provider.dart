@@ -1,11 +1,9 @@
-import '../metrics/batting_metrics.dart';
+import '../analysis/technique_analysis.dart';
 import 'coach_feedback.dart';
 
 enum CoachProviderKind { localGemma, claude, openAi, gemini }
 
-/// A model that turns metrics into coaching feedback.
-///
-/// Implementations: on-device Gemma (M4) and the cloud providers (M3).
+/// A model that turns a clip's measurements into coaching feedback.
 abstract interface class CoachProvider {
   CoachProviderKind get kind;
 
@@ -13,5 +11,5 @@ abstract interface class CoachProvider {
   /// downloaded, or an API key is saved for a cloud provider.
   Future<bool> isAvailable();
 
-  Future<CoachFeedback> analyze(BattingMetrics metrics);
+  Future<CoachFeedback> analyze(TechniqueAnalysis analysis);
 }

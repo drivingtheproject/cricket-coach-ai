@@ -3,15 +3,23 @@ import 'dart:math' as math;
 
 import '../analysis_exception.dart';
 import 'frame_extractor.dart';
+import 'jpeg_size.dart';
 import 'pose_estimator.dart';
 import 'pose_frame.dart';
 
 class PoseExtractionResult {
-  const PoseExtractionResult({required this.frames, required this.durationMs});
+  const PoseExtractionResult({
+    required this.frames,
+    required this.durationMs,
+    this.aspectRatio = 16 / 9,
+  });
 
   /// One entry per sampled time; empty frames mark times with no detection.
   final List<PoseFrame> frames;
   final int durationMs;
+
+  /// Width of the analysed frames divided by their height.
+  final double aspectRatio;
 
   /// Share of sampled frames in which a person was found, 0..1.
   double get detectionRate {
@@ -56,6 +64,7 @@ class PoseExtractionService {
     final durationMs = math.min(info.durationMs, maxDurationMs);
     final times = sampleTimes(durationMs, sampleFps);
     final frames = <PoseFrame>[];
+    double? aspectRatio;
     for (var i = 0; i < times.length; i++) {
       final written = await extractor.extractFrame(
         videoPath,
@@ -65,6 +74,8 @@ class PoseExtractionService {
       List<PoseLandmark>? landmarks;
       if (written != null) {
         try {
+          // Measured from a real frame, so a rotated video is handled.
+          aspectRatio ??= _aspectRatioOf(written);
           landmarks = await estimator.estimate(written);
         } finally {
           _deleteQuietly(written);
@@ -75,7 +86,24 @@ class PoseExtractionService {
       );
       onProgress?.call((i + 1) / times.length);
     }
-    return PoseExtractionResult(frames: frames, durationMs: durationMs);
+    return PoseExtractionResult(
+      frames: frames,
+      durationMs: durationMs,
+      aspectRatio: aspectRatio ??
+          (info.height > 0 ? info.width / info.height : 16 / 9),
+    );
+  }
+
+  static double? _aspectRatioOf(String imagePath) {
+    try {
+      final file = File(imagePath);
+      if (!file.existsSync()) return null;
+      final size = readJpegSize(file.readAsBytesSync());
+      if (size == null || size.width == 0 || size.height == 0) return null;
+      return size.width / size.height;
+    } on FileSystemException {
+      return null;
+    }
   }
 
   /// Evenly spaced sample times in milliseconds covering [durationMs].

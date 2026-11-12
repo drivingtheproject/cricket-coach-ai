@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'analysis/analyzers.dart';
 import 'auth/auth_controller.dart';
 import 'auth/local_auth_repository.dart';
 import 'capture/clip_picker.dart';
@@ -46,6 +47,7 @@ class AppServices {
       pipeline: AnalysisPipeline(
         videos: videos,
         sessions: sessions,
+        analyzers: defaultAnalyzers(),
         poses: PoseExtractionService(
           extractor: const ThumbnailFrameExtractor(),
           estimator: MlKitPoseEstimator(),

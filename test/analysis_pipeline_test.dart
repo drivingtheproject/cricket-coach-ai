@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:cricket_coach_ai/core/analysis/metric.dart';
+import 'package:cricket_coach_ai/core/analysis/technique_analysis.dart';
+import 'package:cricket_coach_ai/core/analysis/technique_analyzer.dart';
 import 'package:cricket_coach_ai/core/analysis_exception.dart';
 import 'package:cricket_coach_ai/core/auth/user.dart';
 import 'package:cricket_coach_ai/core/pose/pose_extraction_service.dart';
@@ -14,6 +17,46 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'support/fake_pose.dart';
 import 'support/test_database.dart';
+
+class FakeAnalyzer implements TechniqueAnalyzer {
+  FakeAnalyzer({this.error});
+
+  final AnalysisException? error;
+  double? seenAspectRatio;
+
+  @override
+  Discipline get discipline => Discipline.batting;
+
+  @override
+  TechniqueAnalysis analyze(
+    List<PoseFrame> frames, {
+    required Handedness handedness,
+    required double aspectRatio,
+  }) {
+    seenAspectRatio = aspectRatio;
+    if (error != null) throw error!;
+    return TechniqueAnalysis(
+      discipline: discipline,
+      handedness: handedness,
+      metrics: const [
+        MetricResult(
+          id: 'knee',
+          label: 'Knee',
+          unit: '°',
+          value: 120,
+          idealMin: 100,
+          idealMax: 140,
+          scaleMin: 60,
+          scaleMax: 180,
+          score: 80,
+          status: MetricStatus.good,
+          note: 'fine',
+        ),
+      ],
+      phases: const [PhaseMarker('Impact', 900)],
+    );
+  }
+}
 
 void main() {
   final user = User(
@@ -54,10 +97,12 @@ void main() {
   AnalysisPipeline pipeline({
     FakeFrameExtractor? extractor,
     FakePoseEstimator? estimator,
+    TechniqueAnalyzer? analyzer,
   }) {
     return AnalysisPipeline(
       videos: videos,
       sessions: sessions,
+      analyzers: {if (analyzer != null) analyzer.discipline: analyzer},
       now: () => DateTime(2026, 11, 12, 9, 5),
       poses: PoseExtractionService(
         extractor: extractor ?? FakeFrameExtractor(durationMs: 2000),
@@ -182,6 +227,55 @@ void main() {
 
       expect(await sessions.listForUser('user-1'), isEmpty);
       expect(Directory(p.join(documents.path, 'videos')).listSync(), isEmpty);
+    });
+  });
+
+  group('AnalysisPipeline with an analyzer', () {
+    test('stores the measurements and score with the session', () async {
+      final analyzer = FakeAnalyzer();
+      final stages = <AnalysisStage>[];
+
+      final session = await run(
+        pipeline(analyzer: analyzer),
+        onProgress: (stage, _) {
+          if (stages.isEmpty || stages.last != stage) stages.add(stage);
+        },
+      );
+
+      final saved = (await sessions.getById(session.id))!;
+      expect(saved.score, 80);
+      final analysis = TechniqueAnalysis.decode(saved.analysisJson!);
+      expect(analysis.handedness, Handedness.left);
+      expect(analysis.metrics.single.id, 'knee');
+      expect(analysis.phases.single.timeMs, 900);
+      expect(stages, contains(AnalysisStage.measuring));
+      // The fake extractor reports a 1280 x 720 video.
+      expect(analyzer.seenAspectRatio, closeTo(16 / 9, 1e-9));
+    });
+
+    test('saves nothing when the movement cannot be found', () async {
+      final failing = pipeline(
+        analyzer: FakeAnalyzer(error: const AnalysisException('no shot')),
+      );
+
+      await expectLater(
+        run(failing),
+        throwsA(
+          isA<AnalysisException>()
+              .having((e) => e.message, 'message', 'no shot'),
+        ),
+      );
+
+      expect(await sessions.listForUser('user-1'), isEmpty);
+      expect(Directory(p.join(documents.path, 'videos')).listSync(), isEmpty);
+    });
+
+    test('a discipline without an analyzer is saved without a score', () async {
+      final session = await run(pipeline());
+
+      final saved = (await sessions.getById(session.id))!;
+      expect(saved.analysisJson, isNull);
+      expect(saved.score, isNull);
     });
   });
 }
