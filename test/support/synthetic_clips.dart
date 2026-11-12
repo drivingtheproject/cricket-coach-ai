@@ -218,18 +218,26 @@ const (double, double) catchKnee = (0.60, 0.70);
 const (double, double) catchAnkle = (0.60, 0.85);
 
 /// A two-handed catch seen from in front, in a square frame. With
-/// [handsApart] the hands never close.
-List<PoseFrame> catchingClip({bool handsApart = false, int frames = 30}) {
+/// [handsApart] the hands never move; with [wide] they reach but never
+/// close.
+List<PoseFrame> catchingClip({
+  bool handsApart = false,
+  bool wide = false,
+  int frames = 30,
+}) {
   return [
     for (var i = 0; i < frames; i++)
       () {
+        final moving = keyframed(const {
+          10: (0.60, 0.50),
+          14: (0.52, 0.36),
+          18: (0.52, 0.46),
+        }, i);
         final left = handsApart
             ? const (0.60, 0.50)
-            : keyframed(const {
-                10: (0.60, 0.50),
-                14: (0.52, 0.36),
-                18: (0.52, 0.46),
-              }, i);
+            : wide
+                ? (0.62, moving.$2)
+                : moving;
         final right = (1 - left.$1, left.$2);
         return frameOf(timeOf(i), {
           PoseLandmarkIndex.nose: const (0.50, 0.22),

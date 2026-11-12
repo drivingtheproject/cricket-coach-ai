@@ -141,10 +141,8 @@ void main() {
     });
 
     test('hands that move but stay apart are not a catch', () {
-      // The batting clip's hands are side by side but the bowling clip's
-      // are far apart while the arm swings.
       expect(
-        () => analyse(bowlingClip()),
+        () => analyse(catchingClip(wide: true)),
         throwsA(isA<AnalysisException>()),
       );
     });
