@@ -125,7 +125,7 @@ repeatable.
 | CI | every push | `flutter analyze` and `flutter test` |
 | Android build | every push | debug APK compiles |
 | iOS build | manual, or push to `ci/ios*` | unsigned iOS build compiles |
-| Release build | manual | release APK as a downloadable artifact |
+| Release build | manual | release APK for 64-bit phones, committed to `builds/cricket-coach.apk` |
 
 ## Milestones
 
