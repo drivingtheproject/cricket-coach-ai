@@ -100,12 +100,10 @@ List<PoseFrame> battingClip({bool leftHanded = false, int frames = 30}) {
           PoseLandmarkIndex.nose: head,
           front.shoulder: frontShoulder,
           back.shoulder: keyframed(const {10: (0.48, 0.30), 16: (0.52, 0.31)}, i),
-          front.elbow: lerp(frontShoulder, hands, 0.5).$1 > 0
-              ? (
-                  lerp(frontShoulder, hands, 0.5).$1 + 0.05,
-                  lerp(frontShoulder, hands, 0.5).$2,
-                )
-              : hands,
+          front.elbow: (
+            lerp(frontShoulder, hands, 0.5).$1 + 0.05,
+            lerp(frontShoulder, hands, 0.5).$2,
+          ),
           back.elbow: lerp(frontShoulder, hands, 0.5),
           front.wrist: (hands.$1 + 0.01, hands.$2),
           back.wrist: (hands.$1 - 0.01, hands.$2),

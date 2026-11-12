@@ -79,7 +79,7 @@ repeatable.
 | M1 | Foundation: design system, login, SQLite, platform folders | Done |
 | M2 | Video capture/import, pose extraction, skeleton overlay | Done |
 | M3 | Batting metrics and phase detection | Done |
-| M4 | Cloud coach: Claude, OpenAI, Gemini; API key settings | |
+| M4 | Cloud coach: Claude, OpenAI, Gemini; built-in coach; API key settings | Done |
 | M5 | Local Gemma 4: model download and auto-routing | |
 | M6 | Session history, progress charts, drills, sync engine | |
 | M7 | Bowling analysis, polish, release build | |

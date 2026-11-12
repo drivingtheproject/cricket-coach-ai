@@ -2,6 +2,7 @@ import '../analysis/technique_analysis.dart';
 import '../analysis/technique_analyzer.dart';
 import '../analysis_exception.dart';
 import '../auth/user.dart';
+import '../coach/coach_service.dart';
 import '../pose/pose_extraction_service.dart';
 import '../pose/pose_frame.dart';
 import '../pose/pose_math.dart';
@@ -30,6 +31,7 @@ class AnalysisPipeline {
     required this.poses,
     required this.sessions,
     this.analyzers = const {},
+    this.coach,
     this.minDetectionRate = 0.4,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
@@ -40,6 +42,10 @@ class AnalysisPipeline {
 
   /// Disciplines without an analyzer are saved with pose tracking only.
   final Map<Discipline, TechniqueAnalyzer> analyzers;
+
+  /// Writes the feedback; without it sessions are saved with measurements
+  /// only.
+  final CoachService? coach;
 
   /// Below this share of frames with a person in them, the clip is rejected.
   final double minDetectionRate;
@@ -71,6 +77,12 @@ class AnalysisPipeline {
         );
       }
 
+      CoachResult? coached;
+      if (analysis != null && coach != null) {
+        onProgress?.call(AnalysisStage.coaching, null);
+        coached = await coach!.feedbackFor(user.id, analysis);
+      }
+
       onProgress?.call(AnalysisStage.saving, null);
       final now = _now();
       final session = Session(
@@ -82,6 +94,8 @@ class AnalysisPipeline {
         videoPath: videoPath,
         durationMs: frames.durationMs,
         analysisJson: analysis?.encode(),
+        feedbackJson: coached?.feedback.encode(),
+        coachProvider: coached?.kind.name,
         score: analysis?.score,
         createdAt: now,
         updatedAt: now,

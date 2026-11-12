@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/analysis/technique_analysis.dart';
+import '../../core/coach/coach_feedback.dart';
+import '../../core/coach/coach_provider.dart';
 import '../../core/pose/pose_frame.dart';
 import '../../core/services.dart';
 import '../../core/sessions/session.dart';
 import '../../core/util/formatters.dart';
 import 'analysis_section.dart';
+import 'feedback_section.dart';
 import 'pose_video_player.dart';
 
 /// Opens the review screen for a session.
@@ -35,6 +38,7 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
   List<PoseFrame> _frames = const [];
   File? _video;
   bool _loaded = false;
+  bool _coaching = false;
 
   @override
   void didChangeDependencies() {
@@ -66,6 +70,30 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
       _video = video;
       _loaded = true;
     });
+  }
+
+  /// Asks the player's current coach for fresh feedback and saves it.
+  Future<void> _refreshFeedback(TechniqueAnalysis analysis) async {
+    final services = _services!;
+    final session = _session;
+    final user = services.auth.user;
+    if (session == null || user == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _coaching = true);
+    try {
+      final result = await services.coach.feedbackFor(user.id, analysis);
+      final saved = await services.sessions.save(
+        session.copyWith(
+          feedbackJson: result.feedback.encode(),
+          coachProvider: result.kind.name,
+        ),
+      );
+      if (mounted) setState(() => _session = saved);
+    } on CoachException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _coaching = false);
+    }
   }
 
   @override
@@ -118,7 +146,19 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
               ),
             ),
           ),
-          if (analysis != null) AnalysisSection(analysis: analysis),
+          if (analysis != null) ...[
+            FeedbackSection(
+              feedback: session.feedbackJson == null
+                  ? null
+                  : CoachFeedback.decode(session.feedbackJson!),
+              coach: CoachProviderKind.values
+                  .where((kind) => kind.name == session.coachProvider)
+                  .firstOrNull,
+              busy: _coaching,
+              onRefresh: () => _refreshFeedback(analysis),
+            ),
+            AnalysisSection(analysis: analysis),
+          ],
           const SizedBox(height: 24),
         ],
       ),

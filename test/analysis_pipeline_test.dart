@@ -5,13 +5,19 @@ import 'package:cricket_coach_ai/core/analysis/technique_analysis.dart';
 import 'package:cricket_coach_ai/core/analysis/technique_analyzer.dart';
 import 'package:cricket_coach_ai/core/analysis_exception.dart';
 import 'package:cricket_coach_ai/core/auth/user.dart';
+import 'package:cricket_coach_ai/core/coach/coach_feedback.dart';
+import 'package:cricket_coach_ai/core/coach/coach_service.dart';
+import 'package:cricket_coach_ai/core/coach/coach_settings.dart';
 import 'package:cricket_coach_ai/core/pose/pose_extraction_service.dart';
 import 'package:cricket_coach_ai/core/pose/pose_frame.dart';
 import 'package:cricket_coach_ai/core/sessions/analysis_pipeline.dart';
 import 'package:cricket_coach_ai/core/sessions/session.dart';
 import 'package:cricket_coach_ai/core/sessions/session_repository.dart';
 import 'package:cricket_coach_ai/core/sessions/video_store.dart';
+import 'package:cricket_coach_ai/core/settings/secret_store.dart';
+import 'package:cricket_coach_ai/core/settings/settings_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/testing.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -98,11 +104,13 @@ void main() {
     FakeFrameExtractor? extractor,
     FakePoseEstimator? estimator,
     TechniqueAnalyzer? analyzer,
+    CoachService? coach,
   }) {
     return AnalysisPipeline(
       videos: videos,
       sessions: sessions,
       analyzers: {if (analyzer != null) analyzer.discipline: analyzer},
+      coach: coach,
       now: () => DateTime(2026, 11, 12, 9, 5),
       poses: PoseExtractionService(
         extractor: extractor ?? FakeFrameExtractor(durationMs: 2000),
@@ -276,6 +284,46 @@ void main() {
       final saved = (await sessions.getById(session.id))!;
       expect(saved.analysisJson, isNull);
       expect(saved.score, isNull);
+    });
+  });
+
+  group('AnalysisPipeline with a coach', () {
+    CoachService coach() => CoachService(
+          settings: CoachSettings(
+            settings: SettingsRepository(db),
+            secrets: InMemorySecretStore(),
+          ),
+          client: MockClient((_) async => fail('no network call expected')),
+        );
+
+    test('stores the feedback and who wrote it', () async {
+      final stages = <AnalysisStage>[];
+
+      final session = await run(
+        pipeline(analyzer: FakeAnalyzer(), coach: coach()),
+        onProgress: (stage, _) {
+          if (stages.isEmpty || stages.last != stage) stages.add(stage);
+        },
+      );
+
+      final saved = (await sessions.getById(session.id))!;
+      expect(saved.coachProvider, 'builtIn');
+      expect(CoachFeedback.decode(saved.feedbackJson!).summary, isNotEmpty);
+      expect(stages, [
+        AnalysisStage.savingClip,
+        AnalysisStage.trackingBody,
+        AnalysisStage.measuring,
+        AnalysisStage.coaching,
+        AnalysisStage.saving,
+      ]);
+    });
+
+    test('writes no feedback when there are no measurements', () async {
+      final session = await run(pipeline(coach: coach()));
+
+      final saved = (await sessions.getById(session.id))!;
+      expect(saved.feedbackJson, isNull);
+      expect(saved.coachProvider, isNull);
     });
   });
 }
