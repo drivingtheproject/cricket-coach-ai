@@ -135,8 +135,9 @@ void main() {
 
   group('clips that cannot be analysed', () {
     test('a clip where the arm never goes above the shoulder', () {
+      // The first 12 frames of the batting clip: hands stay below the chest.
       expect(
-        () => analyse(battingClip()),
+        () => analyse(battingClip(frames: 12)),
         throwsA(
           isA<AnalysisException>().having(
             (e) => e.message,
