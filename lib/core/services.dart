@@ -12,6 +12,7 @@ import 'coach/local/gemma_coach.dart';
 import 'coach/local/model_download_controller.dart';
 import 'coach/local/plugins/edge_ai_llm.dart';
 import 'db/app_database.dart';
+import 'guide/filming_tour.dart';
 import 'pose/plugins/mlkit_pose_estimator.dart';
 import 'pose/plugins/thumbnail_frame_extractor.dart';
 import 'pose/pose_extraction_service.dart';
@@ -35,6 +36,7 @@ class AppServices {
     required this.coachSettings,
     required this.coach,
     required this.sync,
+    required this.tours,
     this.localModel,
   });
 
@@ -47,6 +49,7 @@ class AppServices {
   final CoachSettings coachSettings;
   final CoachService coach;
   final SyncService sync;
+  final TourProgress tours;
 
   /// The on-device model's download state; null in builds without one.
   final ModelDownloadController? localModel;
@@ -78,6 +81,7 @@ class AppServices {
       coachSettings: coachSettings,
       coach: coach,
       localModel: ModelDownloadController(llm),
+      tours: TourProgress(settings),
       // Swap in a Firebase-backed CloudBackend here to turn sync on.
       sync: SyncService(
         sessions: sessions,

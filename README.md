@@ -13,7 +13,11 @@ you can review them and follow your progress.
    as salted PBKDF2 hashes.
 2. **Choose a discipline** - batting, bowling, fielding (catching) or
    wicketkeeping.
-3. **Capture** - record or import a short clip of one ball.
+3. **Capture** - record or import a short clip of one ball. A guided tour
+   for each discipline shows where to put the camera, how to frame the
+   player and what the clip must contain. It opens by itself the first time
+   you record a discipline and can be replayed from the new-session screen
+   or from Settings.
 4. **Pose** - 33 body landmarks are extracted per sampled frame, on the device
    (Google ML Kit pose detection).
 5. **Measure** - pure Dart analyzers find the key moments of the movement and
@@ -72,6 +76,7 @@ lib/
     capture/   clip picker
     coach/     coach providers (cloud/, local/), prompt, parser, drills
     db/        SQLite schema
+    guide/     filming tours for each discipline
     pose/      landmarks, frame extraction, pose estimation
     progress/  progress summaries
     sessions/  Session model, repository, analysis pipeline, video store

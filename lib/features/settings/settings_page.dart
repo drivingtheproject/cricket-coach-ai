@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/services.dart';
 import '../../widgets/section_title.dart';
 import '../coach/coach_settings_page.dart';
+import '../guide/filming_guides_page.dart';
 import 'sync_section.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -52,6 +53,19 @@ class SettingsPage extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const CoachSettingsPage(),
+              ),
+            ),
+          ),
+          ListTile(
+            key: const Key('settings-guides'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            leading: const Icon(Icons.videocam_outlined),
+            title: const Text('How to film'),
+            subtitle: const Text('Step-by-step guides for each discipline'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const FilmingGuidesPage(),
               ),
             ),
           ),

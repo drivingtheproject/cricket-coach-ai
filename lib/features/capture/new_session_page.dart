@@ -4,6 +4,7 @@ import '../../core/analysis/filming_guide.dart';
 import '../../core/capture/clip_picker.dart';
 import '../../core/services.dart';
 import '../../core/sessions/session.dart';
+import '../guide/filming_tour_page.dart';
 import 'analysis_page.dart';
 
 /// Where a new analysis starts: pick what you are practising, then record or
@@ -21,8 +22,26 @@ class _NewSessionPageState extends State<NewSessionPage> {
   bool _picking = false;
 
   Future<void> _pick(ClipSource source) async {
-    final picker = ServicesScope.of(context).clipPicker;
+    final services = ServicesScope.of(context);
+    final picker = services.clipPicker;
     final messenger = ScaffoldMessenger.of(context);
+
+    // The first time a discipline is filmed, walk through its tour first.
+    final userId = services.auth.user?.id;
+    final discipline = _discipline;
+    if (source == ClipSource.camera &&
+        userId != null &&
+        !await services.tours.hasSeen(userId, discipline)) {
+      if (!mounted) return;
+      final finished = await showFilmingTour(
+        context,
+        discipline,
+        doneLabel: 'Start filming',
+      );
+      if (!finished || !mounted) return;
+      await services.tours.markSeen(userId, discipline);
+    }
+    if (!mounted) return;
     setState(() => _picking = true);
     String? path;
     try {
@@ -98,7 +117,18 @@ class _NewSessionPageState extends State<NewSessionPage> {
           Text('For a clip we can read', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           for (final tip in guide.tips) _Tip(tip),
-          const SizedBox(height: 28),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const Key('new-session-tour'),
+              onPressed: () => showFilmingTour(context, _discipline),
+              icon: const Icon(Icons.help_outline),
+              label: Text(
+                'Show me how to film ${_discipline.label.toLowerCase()}',
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           FilledButton.icon(
             key: const Key('new-session-record'),
             onPressed: _picking ? null : () => _pick(ClipSource.camera),
