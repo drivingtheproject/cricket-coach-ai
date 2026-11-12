@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/services.dart';
 import '../../widgets/section_title.dart';
 import '../coach/coach_settings_page.dart';
+import 'sync_section.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -54,6 +55,8 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          const SyncSection(),
           const SizedBox(height: 16),
           const SectionTitle('Account'),
           ListTile(

@@ -12,6 +12,7 @@ import '../../core/util/formatters.dart';
 import 'analysis_section.dart';
 import 'feedback_section.dart';
 import 'pose_video_player.dart';
+import 'session_notes.dart';
 
 /// Opens the review screen for a session.
 void openSession(BuildContext context, String sessionId) {
@@ -96,6 +97,81 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
     }
   }
 
+  Future<void> _rename() async {
+    final services = _services!;
+    final session = _session!;
+    final controller = TextEditingController(text: session.title);
+    final title = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename session'),
+        content: TextField(
+          key: const Key('rename-field'),
+          controller: controller,
+          autofocus: true,
+          maxLength: 60,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(labelText: 'Name'),
+          onSubmitted: (value) => Navigator.of(context).pop(value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const Key('rename-save'),
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+    final trimmed = title?.trim() ?? '';
+    if (trimmed.isEmpty || trimmed == session.title) return;
+    final saved = await services.sessions.save(session.copyWith(title: trimmed));
+    if (mounted) setState(() => _session = saved);
+  }
+
+  Future<void> _delete() async {
+    final services = _services!;
+    final session = _session!;
+    final navigator = Navigator.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this session?'),
+        content: const Text(
+          'The clip, measurements, feedback and notes are removed. This '
+          'cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const Key('delete-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete session'),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false)) return;
+    await services.videos.delete(session.videoPath);
+    await services.sessions.softDelete(session.id);
+    navigator.pop();
+  }
+
+  Future<void> _saveNotes(String notes) async {
+    final session = _session;
+    if (session == null) return;
+    final saved =
+        await _services!.sessions.save(session.copyWith(notes: notes));
+    if (mounted) setState(() => _session = saved);
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = _session;
@@ -116,7 +192,20 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
     final encoded = session.analysisJson;
     final analysis = encoded == null ? null : TechniqueAnalysis.decode(encoded);
     return Scaffold(
-      appBar: AppBar(title: Text(session.title)),
+      appBar: AppBar(
+        title: Text(session.title),
+        actions: [
+          PopupMenuButton<VoidCallback>(
+            key: const Key('session-menu'),
+            tooltip: 'Session options',
+            onSelected: (action) => action(),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: _rename, child: const Text('Rename')),
+              PopupMenuItem(value: _delete, child: const Text('Delete')),
+            ],
+          ),
+        ],
+      ),
       body: ListView(
         children: [
           if (video != null)
@@ -159,6 +248,7 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
             ),
             AnalysisSection(analysis: analysis),
           ],
+          SessionNotes(notes: session.notes, onSave: _saveNotes),
           const SizedBox(height: 24),
         ],
       ),

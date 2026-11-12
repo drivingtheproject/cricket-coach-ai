@@ -81,7 +81,7 @@ repeatable.
 | M3 | Batting metrics and phase detection | Done |
 | M4 | Cloud coach: Claude, OpenAI, Gemini; built-in coach; API key settings | Done |
 | M5 | Local Gemma 4: model download and auto-routing | Done |
-| M6 | Session history, progress charts, drills, sync engine | |
+| M6 | Session review (rename, notes, delete), progress charts, drills, sync engine | Done |
 | M7 | Bowling analysis, polish, release build | |
 | M8 | Fielding and catching | |
 | M9 | Wicketkeeping | |

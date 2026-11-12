@@ -117,5 +117,51 @@ class SessionRepository {
     _changed();
   }
 
+  /// Marks sessions as synced, skipping any that were edited again after
+  /// the copies in [pushed] were read.
+  Future<void> markSyncedIfUnchanged(List<Session> pushed) async {
+    if (pushed.isEmpty) return;
+    final batch = _db.batch();
+    for (final session in pushed) {
+      batch.update(
+        'sessions',
+        {'sync_state': SyncState.synced.name},
+        where: 'id = ? AND updated_at = ?',
+        whereArgs: [session.id, session.updatedAt.millisecondsSinceEpoch],
+      );
+    }
+    await batch.commit(noResult: true);
+    _changed();
+  }
+
+  /// Stores a session exactly as the cloud has it, replacing any local copy,
+  /// and marks it synced. The clip path is kept from the local copy because
+  /// clips do not sync.
+  Future<void> applyFromCloud(Session incoming) async {
+    final local = await getById(incoming.id);
+    final row = incoming.copyWith(syncState: SyncState.synced).toRow()
+      ..['video_path'] = local?.videoPath;
+    // An update, not a replace: replacing the row would cascade-delete the
+    // session's pose data.
+    if (local == null) {
+      await _db.insert('sessions', row);
+    } else {
+      await _db.update(
+        'sessions',
+        row,
+        where: 'id = ?',
+        whereArgs: [incoming.id],
+      );
+    }
+    if (incoming.deleted) {
+      await _db.delete(
+        'session_poses',
+        where: 'session_id = ?',
+        whereArgs: [incoming.id],
+      );
+    }
+    _changed();
+  }
+
   void _changed() => changes.value++;
 }

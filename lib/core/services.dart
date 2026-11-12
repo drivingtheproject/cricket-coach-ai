@@ -20,6 +20,8 @@ import 'sessions/session_repository.dart';
 import 'sessions/video_store.dart';
 import 'settings/plugins/secure_secret_store.dart';
 import 'settings/settings_repository.dart';
+import 'sync/cloud_backend.dart';
+import 'sync/sync_service.dart';
 
 /// The long-lived objects the app is built from.
 class AppServices {
@@ -32,6 +34,7 @@ class AppServices {
     required this.pipeline,
     required this.coachSettings,
     required this.coach,
+    required this.sync,
     this.localModel,
   });
 
@@ -43,6 +46,7 @@ class AppServices {
   final AnalysisPipeline pipeline;
   final CoachSettings coachSettings;
   final CoachService coach;
+  final SyncService sync;
 
   /// The on-device model's download state; null in builds without one.
   final ModelDownloadController? localModel;
@@ -54,8 +58,9 @@ class AppServices {
     await auth.restore();
     final sessions = SessionRepository(database);
     final videos = VideoStore.onDevice();
+    final settings = SettingsRepository(database);
     final coachSettings = CoachSettings(
-      settings: SettingsRepository(database),
+      settings: settings,
       secrets: const SecureSecretStore(),
     );
     final llm = EdgeAiLlm();
@@ -73,6 +78,12 @@ class AppServices {
       coachSettings: coachSettings,
       coach: coach,
       localModel: ModelDownloadController(llm),
+      // Swap in a Firebase-backed CloudBackend here to turn sync on.
+      sync: SyncService(
+        sessions: sessions,
+        settings: settings,
+        backend: const NoCloudBackend(),
+      ),
       pipeline: AnalysisPipeline(
         videos: videos,
         sessions: sessions,
