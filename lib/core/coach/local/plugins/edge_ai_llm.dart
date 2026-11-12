@@ -46,13 +46,17 @@ class EdgeAiLlm implements OnDeviceLlm {
     // The context window has to hold the prompt and the reply.
     final model = await FlutterEdgeAi.getActiveModel(maxTokens: 2048);
     try {
-      final chat = await model.createChat(maxOutputTokens: maxOutputTokens);
-      await chat.addQueryChunk(Message.text(text: prompt, isUser: true));
-      final reply = StringBuffer();
-      await for (final response in chat.generateChatResponseAsync()) {
-        if (response is TextResponse) reply.write(response.token);
+      final chat = await model.openChat(maxOutputTokens: maxOutputTokens);
+      try {
+        await chat.addQueryChunk(Message.text(text: prompt, isUser: true));
+        final reply = StringBuffer();
+        await for (final response in chat.generateChatResponseAsync()) {
+          if (response is TextResponse) reply.write(response.token);
+        }
+        return reply.toString();
+      } finally {
+        await chat.close();
       }
-      return reply.toString();
     } finally {
       // Frees the model's memory (around 2 GB) as soon as the reply is done.
       await model.close();
